@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using BinarySerialization.Readers;
 using BinarySerialization.Writers;
 
@@ -49,9 +52,16 @@ namespace BinarySerialization
         {
             var typeFullName = obj.GetType().AssemblyQualifiedName;
 
-            Trace.WriteLine("Write object type...");
-            _writer.WriteObject(typeFullName, stream);
-            Trace.WriteLine("Write object...");
+            byte[] typeFullNameBytes;
+            using(var md5 = MD5.Create())
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                typeFullNameBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(typeFullName));
+            }
+
+            Debug.WriteLine("Write object type...");
+            _writer.WriteObject(typeFullNameBytes, stream);
+            Debug.WriteLine("Write object...");
             _writer.WriteObject(obj, stream);
         }
 
@@ -63,16 +73,26 @@ namespace BinarySerialization
         public object Deserialize(Type objectType, Stream stream)
         {
             var targetTypeFullName = objectType.AssemblyQualifiedName;
-            Trace.WriteLine("Read object type...");
-            var typeFullName = (string)_reader.ReadObject(typeof(string), stream);
+            Debug.WriteLine("Read object type...");
+            var typeFullNameBytes = (byte[])_reader.ReadObject(typeof(byte[]), stream);
 
-            if(targetTypeFullName == typeFullName)
+            byte[] targetTypeFullNameBytes;
+            using(var md5 = MD5.Create())
             {
-                Trace.WriteLine("Read object...");
+                // ReSharper disable once AssignNullToNotNullAttribute
+                targetTypeFullNameBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(targetTypeFullName));
+            }
+
+            if(targetTypeFullNameBytes.SequenceEqual(typeFullNameBytes))
+            {
+                Debug.WriteLine("Read object...");
                 return _reader.ReadObject(objectType, stream);
             }
 
-            throw new ArgumentException(String.Format("Unable to deserialize object: Expected type \"{0}\" but found \"{1}\"", targetTypeFullName, typeFullName));
+            var targetTypeBinaryString = String.Join("", targetTypeFullNameBytes.Select(x => Convert.ToString(x, 16).PadLeft(2, '0')));
+            var typeBinaryString = String.Join("", typeFullNameBytes.Select(x => Convert.ToString(x, 16).PadLeft(2, '0')));
+
+            throw new ArgumentException(String.Format("Unable to deserialize object: Wrong type hash \"{0}\" expected \"{1}\"", typeBinaryString, targetTypeBinaryString));
         }
     }
 }
