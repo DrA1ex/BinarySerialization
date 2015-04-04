@@ -8,6 +8,7 @@
         Class,
         Struct,
         Enumerable,
+        Enum,
         Unsupported
     }
 }

@@ -29,6 +29,10 @@ namespace BinarySerialization.Utils
             {
                 return ObjectType.Class;
             }
+            if(type.IsEnum)
+            {
+                return ObjectType.Enum;
+            }
             if(type.IsValueType)
             {
                 return ObjectType.Struct;

@@ -101,6 +101,9 @@ namespace BinarySerialization.Readers
                 case ObjectType.Enumerable:
                     result = ReadEnumerable(type, stream);
                     break;
+                case ObjectType.Enum:
+                    result = ReadEnum(type, stream);
+                    break;
                 case ObjectType.Unsupported:
                     TraceUtils.WriteLineFormatted("Unsupported value of type: \"{0}\"", type.FullName);
                     break;
@@ -230,6 +233,11 @@ namespace BinarySerialization.Readers
         private object ReadStruct(Type type, Stream stream)
         {
             return ReadObjectInternal(type, stream);
+        }
+
+        private object ReadEnum(Type type, Stream stream)
+        {
+            return ReadPrimitive(Enum.GetUnderlyingType(type), stream);
         }
 
         private bool ReadNullFlag(Stream stream)
