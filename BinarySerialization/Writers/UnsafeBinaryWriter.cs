@@ -98,6 +98,9 @@ namespace BinarySerialization.Writers
                     case ObjectType.Enumerable:
                         WriteEnumerable(value, type, stream);
                         break;
+                    case ObjectType.Enum:
+                        WriteEnum(value, stream);
+                        break;
                     case ObjectType.Unsupported:
                         TraceUtils.WriteLineFormatted("Unsupported value of type: \"{0}\"", type.FullName);
                         break;
@@ -108,6 +111,7 @@ namespace BinarySerialization.Writers
                 WriteNullFlag(true, stream);
             }
         }
+
 
         private void WritePrimitive(object value, Stream stream)
         {
@@ -211,6 +215,12 @@ namespace BinarySerialization.Writers
             {
                 TraceUtils.WriteLineFormatted("Unable to write Enumerable of type \"{0}\": Unsupported", type);
             }
+        }
+
+        private void WriteEnum(object value, Stream stream)
+        {
+            var targetType = Enum.GetUnderlyingType(value.GetType());
+            WritePrimitive(Convert.ChangeType(value, targetType), stream);
         }
 
         private void WriteClass(object value, Stream stream)
