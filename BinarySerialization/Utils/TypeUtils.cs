@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace BinarySerialization.Utils
 {
-    internal static class TypeUtils
+    public static class TypeUtils
     {
-        internal static ObjectType DetermineObjectType(Type type)
+        public static ObjectType DetermineObjectType(Type type)
         {
             if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
@@ -37,7 +37,7 @@ namespace BinarySerialization.Utils
             return ObjectType.Unsupported;
         }
 
-        internal static Type GetEnumerableItemType(Type type)
+        public static Type GetEnumerableItemType(Type type)
         {
             var elementType = type.GetElementType();
 
@@ -53,20 +53,20 @@ namespace BinarySerialization.Utils
             return elementType;
         }
 
-        internal static bool IsSupportedElementType(Type elementType)
+        public static bool IsSupportedElementType(Type elementType)
         {
             return elementType != typeof(object)
                                        && !elementType.IsAbstract
                                        && !elementType.IsInterface;
         }
 
-        internal static IList CreateList(Type itemType)
+        public static IList CreateList(Type itemType)
         {
             var collectionType = typeof(List<>).MakeGenericType(itemType);
             return (IList)Activator.CreateInstance(collectionType);
         }
 
-        internal static Array CreateArray(Type itemType, int length)
+        public static Array CreateArray(Type itemType, int length)
         {
             return Array.CreateInstance(itemType, length);
         }

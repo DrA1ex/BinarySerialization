@@ -1,6 +1,6 @@
 ﻿namespace BinarySerialization
 {
-    internal enum ObjectType
+    public enum ObjectType
     {
         Primitive,
         Nullable,

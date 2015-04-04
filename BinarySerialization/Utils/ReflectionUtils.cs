@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace BinarySerialization.Utils
 {
-    internal static class ReflectionUtils
+    public static class ReflectionUtils
     {
         public static bool IsAssignableTo<T>(this Type type)
         {

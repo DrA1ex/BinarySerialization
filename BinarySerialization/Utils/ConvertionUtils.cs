@@ -7,7 +7,7 @@ using System.Text;
 
 namespace BinarySerialization.Utils
 {
-    internal static class ConvertionUtils
+    public static class ConvertionUtils
     {
         private static readonly Encoding StringEncoding = Encoding.UTF8;
         private static readonly Type[] TypesWithCustomConverter = { typeof(byte), typeof(decimal) };
@@ -25,12 +25,12 @@ namespace BinarySerialization.Utils
             return typeof(BitConverter).GetMethods(BindingFlags.Static | BindingFlags.Public).SingleOrDefault(c => c.Name == "To" + type.Name);
         }
 
-        internal static bool CanConvertPrimitiveType(Type type)
+        public static bool CanConvertPrimitiveType(Type type)
         {
             return TypesWithCustomConverter.Contains(type) || FindGetBytesMethod(type) != null && FindGetValueMethod(type) != null;
         }
 
-        internal static byte[] GetBytes(object value)
+        public static byte[] GetBytes(object value)
         {
             Contract.Requires<ArgumentNullException>(value != null);
 
@@ -72,14 +72,14 @@ namespace BinarySerialization.Utils
             throw new Exception("Unexpected exception");
         }
 
-        internal static byte[] GetStringBytes(string value)
+        public static byte[] GetStringBytes(string value)
         {
             Contract.Requires<ArgumentNullException>(value != null);
 
             return StringEncoding.GetBytes(value);
         }
 
-        internal static object GetValue(Type type, byte[] bytes)
+        public static object GetValue(Type type, byte[] bytes)
         {
             Contract.Requires<ArgumentNullException>(type != null);
             Contract.Requires<ArgumentNullException>(bytes != null && bytes.Length > 0);
@@ -119,14 +119,14 @@ namespace BinarySerialization.Utils
             throw new Exception("Unexpected exception");
         }
 
-        internal static string GetString(byte[] bytes)
+        public static string GetString(byte[] bytes)
         {
             Contract.Requires<ArgumentNullException>(bytes != null && bytes.Length > 0);
 
             return StringEncoding.GetString(bytes);
         }
 
-        internal static Array ConvertListToArray(IList list)
+        public static Array ConvertListToArray(IList list)
         {
             var itemType = TypeUtils.GetEnumerableItemType(list.GetType());
             var array = TypeUtils.CreateArray(itemType, list.Count);
