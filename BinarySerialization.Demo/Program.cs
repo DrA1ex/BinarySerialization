@@ -127,9 +127,17 @@ namespace BinarySerialization.Demo
                 Console.WriteLine("Press any key to serialize");
                 Console.ReadKey(true);
                 binarySerializer.Serialize(data, stream);
-
                 stream.Seek(0, SeekOrigin.Begin);
-                Console.WriteLine("Serialized size: {0} bytes", stream.Length);
+
+                long formatterLength;
+                using(var ms = new MemoryStream())
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(ms, data);
+                    formatterLength = ms.Length;
+                }
+
+                Console.WriteLine("Serialized size: {0} bytes (BinaryFormatter: {1} bytes)", stream.Length, formatterLength);
 
                 Console.WriteLine();
                 Console.WriteLine("Press any key to deserialize");
@@ -142,10 +150,6 @@ namespace BinarySerialization.Demo
                 Console.WriteLine("Press any key to exit");
                 Console.ReadKey(true);
             }
-
-            var formatter = new BinaryFormatter();
-            var ms = new MemoryStream();
-            formatter.Serialize(ms, data);
         }
 
         private static void PrintHieracy(object obj, int depth = 0)
