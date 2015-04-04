@@ -5,13 +5,22 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.Serialization.Formatters.Binary;
 using BinarySerialization.Utils;
 
 namespace BinarySerialization.Demo
 {
+    internal enum TestEnum
+    {
+        A,
+        B,
+        C
+    }
+
     [Serializable]
     internal class TestClass
     {
+        public TestEnum Enum { get; set; }
         public int[] Array { get; set; }
         public IList<int> List { get; set; }
         public IList<dynamic> Enumerable { get; set; }
@@ -49,9 +58,10 @@ namespace BinarySerialization.Demo
 
             var data = new TestClass
                        {
-                           Array = new[] {1, 2, 3, 4, 5},
-                           List = new List<int>(new[] {6, 7, 8, 9, 10}),
-                           Enumerable = new dynamic[] {1, "2", null},
+                           Enum = TestEnum.B,
+                           Array = new[] { 1, 2, 3, 4, 5 },
+                           List = new List<int>(new[] { 6, 7, 8, 9, 10 }),
+                           Enumerable = new dynamic[] { 1, "2", null },
                            TestChildObjects = new[]
                                               {
                                                   new TestChildObject
@@ -82,9 +92,9 @@ namespace BinarySerialization.Demo
                                     },
                            TestClassObj = new TestClass
                                           {
-                                              Array = new[] {1, 2, 3, 4, 5},
-                                              List = new List<int>(new[] {6, 7, 8, 9, 10}),
-                                              Enumerable = new dynamic[] {1, "2", null},
+                                              Array = new[] { 1, 2, 3, 4, 5 },
+                                              List = new List<int>(new[] { 6, 7, 8, 9, 10 }),
+                                              Enumerable = new dynamic[] { 1, "2", null },
                                               Int = 11,
                                               NullableInt = 1234,
                                               String = "Бла-бла длинный текст",
@@ -132,6 +142,10 @@ namespace BinarySerialization.Demo
                 Console.WriteLine("Press any key to exit");
                 Console.ReadKey(true);
             }
+
+            var formatter = new BinaryFormatter();
+            var ms = new MemoryStream();
+            formatter.Serialize(ms, data);
         }
 
         private static void PrintHieracy(object obj, int depth = 0)
@@ -189,7 +203,7 @@ namespace BinarySerialization.Demo
             switch(valueType)
             {
                 case ObjectType.Primitive:
-                    primitive:
+                primitive:
                     bytes = ConvertionUtils.GetBytes(value);
                     if(bytes != null)
                     {
@@ -224,6 +238,10 @@ namespace BinarySerialization.Demo
                     Console.WriteLine();
                     PrintHieracy(value, depth + 1);
                     break;
+                case ObjectType.Enum:
+                    value = Convert.ChangeType(value, Enum.GetUnderlyingType(propType));
+                    goto primitive;
+
                 case ObjectType.Enumerable:
                     var elementType = TypeUtils.GetEnumerableItemType(propType);
 
