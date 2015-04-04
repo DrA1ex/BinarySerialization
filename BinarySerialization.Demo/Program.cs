@@ -15,6 +15,7 @@ namespace BinarySerialization.Demo
         public int[] Array { get; set; }
         public IList<int> List { get; set; }
         public IList<dynamic> Enumerable { get; set; }
+        public TestChildObject[] TestChildObjects { get; set; }
         public int Int { get; set; }
         public int? NullableInt { get; set; }
         public string String { get; set; }
@@ -48,9 +49,23 @@ namespace BinarySerialization.Demo
 
             var data = new TestClass
                        {
-                           Array = new[] { 1, 2, 3, 4, 5 },
-                           List = new List<int>(new[] { 6, 7, 8, 9, 10 }),
-                           Enumerable = new dynamic[] { 1, "2", null },
+                           Array = new[] {1, 2, 3, 4, 5},
+                           List = new List<int>(new[] {6, 7, 8, 9, 10}),
+                           Enumerable = new dynamic[] {1, "2", null},
+                           TestChildObjects = new[]
+                                              {
+                                                  new TestChildObject
+                                                  {
+                                                      Decimal = new Decimal(13.14),
+                                                      Byte = 15
+                                                  },
+                                                  null,
+                                                  new TestChildObject
+                                                  {
+                                                      Decimal = new Decimal(13.14),
+                                                      Byte = 15
+                                                  }
+                                              },
                            Int = 11,
                            NullableInt = null,
                            String = "Бла-бла длинный текст",
@@ -67,9 +82,9 @@ namespace BinarySerialization.Demo
                                     },
                            TestClassObj = new TestClass
                                           {
-                                              Array = new[] { 1, 2, 3, 4, 5 },
-                                              List = new List<int>(new[] { 6, 7, 8, 9, 10 }),
-                                              Enumerable = new dynamic[] { 1, "2", null },
+                                              Array = new[] {1, 2, 3, 4, 5},
+                                              List = new List<int>(new[] {6, 7, 8, 9, 10}),
+                                              Enumerable = new dynamic[] {1, "2", null},
                                               Int = 11,
                                               NullableInt = 1234,
                                               String = "Бла-бла длинный текст",
@@ -128,7 +143,7 @@ namespace BinarySerialization.Demo
 
                 if(depth == 0)
                 {
-                    Console.WriteLine("- {0}", obj.GetType().Name);
+                    Console.WriteLine("- {0}", type.Name);
                 }
 
                 depth += 1;
@@ -174,7 +189,7 @@ namespace BinarySerialization.Demo
             switch(valueType)
             {
                 case ObjectType.Primitive:
-                primitive:
+                    primitive:
                     bytes = ConvertionUtils.GetBytes(value);
                     if(bytes != null)
                     {
@@ -223,7 +238,7 @@ namespace BinarySerialization.Demo
                         var enumerable = (IEnumerable)value;
 
                         // ReSharper disable PossibleMultipleEnumeration
-                        var supportedEnumerable = enumerable.Cast<object>().All(item => item.GetType() == elementType);
+                        var supportedEnumerable = enumerable.Cast<object>().All(item => item == null || item.GetType() == elementType);
 
                         if(supportedEnumerable)
                         {
@@ -234,7 +249,17 @@ namespace BinarySerialization.Demo
                             {
                                 foreach(var item in enumerable)
                                 {
-                                    PrintHieracy(item, depth + 1);
+                                    var compositeObject = elementType.IsClass || elementType.IsValueType && !elementType.IsPrimitive;
+                                    if(compositeObject)
+                                    {
+                                        Console.Write("{0}+ {1}: ", GetPadding(depth + 1), elementType.Name);
+                                        Console.WriteLine(item != null ? "0x01 (not-null)" : "0x00 (null)");
+                                    }
+
+                                    if(item != null)
+                                    {
+                                        PrintHieracy(item, depth + 1);
+                                    }
                                 }
                             }
                         }
