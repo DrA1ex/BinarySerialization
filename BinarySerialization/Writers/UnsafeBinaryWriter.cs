@@ -24,6 +24,8 @@ namespace BinarySerialization.Writers
 
         private void WriteObjectInternal(object obj, Stream stream)
         {
+            Contract.Requires<ArgumentNullException>(obj != null);
+
             var type = obj.GetType();
             if(type != typeof(object))
             {
@@ -168,7 +170,7 @@ namespace BinarySerialization.Writers
                 var enumerable = (IEnumerable)value;
 
                 // ReSharper disable PossibleMultipleEnumeration
-                var supportedEnumerable = enumerable.Cast<object>().All(item => item.GetType() == elementType);
+                var supportedEnumerable = enumerable.Cast<object>().All(item => item == null || item.GetType() == elementType);
 
                 if(supportedEnumerable)
                 {
@@ -180,7 +182,7 @@ namespace BinarySerialization.Writers
                         var count = 0;
                         foreach(var item in enumerable)
                         {
-                            WriteObjectInternal(item, internalStream);
+                            WritePlainObject(item, elementType, internalStream);
                             ++count;
                         }
 

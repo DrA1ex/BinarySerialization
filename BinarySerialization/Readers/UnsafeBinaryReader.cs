@@ -184,7 +184,7 @@ namespace BinarySerialization.Readers
 
                         for(var i = 0; i < count; i++)
                         {
-                            var item = ReadObjectInternal(elementType, stream);
+                            var item = ReadPlainObject(elementType, stream);
                             result.Add(item);
                         }
 
