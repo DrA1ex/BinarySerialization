@@ -13,13 +13,17 @@ namespace BinarySerialization.Utils
             {
                 return ObjectType.Nullable;
             }
-            if(type.IsPrimitive || type == typeof(decimal))
+            if(type.IsPrimitive || type == typeof(decimal) || type == typeof(TimeSpan))
             {
                 return ObjectType.Primitive;
             }
             if(type == typeof(string))
             {
                 return ObjectType.String;
+            }
+            if(type == typeof(DateTime))
+            {
+                return ObjectType.DateTime;
             }
             if(type.IsAssignableTo<IEnumerable>())
             {

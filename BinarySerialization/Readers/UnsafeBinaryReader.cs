@@ -99,6 +99,9 @@ namespace BinarySerialization.Readers
                 case ObjectType.String:
                     result = ReadString(stream);
                     break;
+                case ObjectType.DateTime:
+                    result = ReadDateTime(stream);
+                    break;
                 case ObjectType.Class:
                     result = ReadClass(type, stream);
                     break;
@@ -155,6 +158,12 @@ namespace BinarySerialization.Readers
             }
 
             return null;
+        }
+
+        private object ReadDateTime(Stream stream)
+        {
+            var ticks = (long)ReadPrimitive(typeof(long), stream);
+            return new DateTime(ticks);
         }
 
         private object ReadEnumerable(Type type, Stream stream)
