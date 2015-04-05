@@ -21,6 +21,9 @@ namespace BinarySerialization.Demo
     internal class TestClass
     {
         public TestEnum Enum { get; set; }
+        public DateTime DateTime { get; set; }
+        public TimeSpan DateTimeOffset { get; set; }
+
         public int[] Array { get; set; }
         public IList<int> List { get; set; }
         public IList<dynamic> Enumerable { get; set; }
@@ -59,6 +62,8 @@ namespace BinarySerialization.Demo
             var data = new TestClass
                        {
                            Enum = TestEnum.B,
+                           DateTime = DateTime.Now,
+                           DateTimeOffset = DateTime.Now - DateTime.Today,
                            Array = new[] { 1, 2, 3, 4, 5 },
                            List = new List<int>(new[] { 6, 7, 8, 9, 10 }),
                            Enumerable = new dynamic[] { 1, "2", null },
@@ -210,7 +215,7 @@ namespace BinarySerialization.Demo
                 primitive:
                     var readed = ConvertionUtils.Convert(value, bytes);
                     Console.WriteLine("{0} (data)", ByteArrayToString(bytes, readed));
-                    
+
                     break;
 
                 case ObjectType.Nullable:
@@ -226,6 +231,10 @@ namespace BinarySerialization.Demo
                     }
                     Console.WriteLine();
                     break;
+
+                case ObjectType.DateTime:
+                    value = ((DateTime)value).Ticks;
+                    goto primitive;
 
                 case ObjectType.Class:
                     Console.WriteLine("0x01 (not-null)");

@@ -9,6 +9,7 @@
         Struct,
         Enumerable,
         Enum,
-        Unsupported
+        DateTime,
+        Unsupported,
     }
 }

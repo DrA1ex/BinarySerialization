@@ -96,6 +96,9 @@ namespace BinarySerialization.Writers
                     case ObjectType.String:
                         WriteString((string)value, stream);
                         break;
+                    case ObjectType.DateTime:
+                        WriteDateTime((DateTime)value, stream);
+                        break;
                     case ObjectType.Class:
                         WriteClass(value, stream);
                         break;
@@ -118,7 +121,6 @@ namespace BinarySerialization.Writers
                 WriteNullFlag(true, stream);
             }
         }
-
 
         private void WritePrimitive(object value, Stream stream)
         {
@@ -150,6 +152,11 @@ namespace BinarySerialization.Writers
             {
                 WritePrimitive(0, stream);
             }
+        }
+
+        private void WriteDateTime(DateTime value, Stream stream)
+        {
+            WritePrimitive(value.Ticks, stream);
         }
 
         private void WriteEnumerable(object value, Type type, Stream stream)
