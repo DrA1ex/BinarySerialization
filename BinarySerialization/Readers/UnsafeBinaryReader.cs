@@ -10,6 +10,13 @@ namespace BinarySerialization.Readers
 {
     public class UnsafeBinaryReader : IBinaryReader
     {
+        private byte[] _temporaryBuffer;
+
+        public byte[] TemporaryBuffer
+        {
+            get { return _temporaryBuffer ?? (_temporaryBuffer = new byte[sizeof(decimal)]); }
+        }
+
         public object ReadObject(Type type, Stream stream)
         {
             Contract.Requires<ArgumentNullException>(stream != null);
@@ -114,31 +121,19 @@ namespace BinarySerialization.Readers
 
         private object ReadPrimitive(Type type, Stream stream)
         {
-            if(ConvertionUtils.CanConvertPrimitiveType(type))
-            {
-                var bytesToRead = Marshal.SizeOf(type);
-                var bytes = ReadStream(stream, bytesToRead);
+            var bytesToRead = Marshal.SizeOf(type);
+            ReadStream(stream, TemporaryBuffer, bytesToRead);
 
-                return ConvertionUtils.GetValue(type, bytes);
-            }
-
-            TraceUtils.WriteLineFormatted("Unable to read value of type \"{0}\": Unable to find suitable converter", type.FullName);
-
-            return null;
+            return ConvertionUtils.GetValue(type, TemporaryBuffer);
         }
 
         private object ReadNullable(Type type, Stream stream)
         {
-            if(ConvertionUtils.CanConvertPrimitiveType(Nullable.GetUnderlyingType(type)))
+            var isNull = ReadNullFlag(stream);
+            if(!isNull)
             {
-                var isNull = ReadNullFlag(stream);
-                if(!isNull)
-                {
-                    return ReadPlainObject(Nullable.GetUnderlyingType(type), stream);
-                }
+                return ReadPlainObject(Nullable.GetUnderlyingType(type), stream);
             }
-
-            TraceUtils.WriteLineFormatted("Unable to read Nullable value of type \"{0}\": Unable to find suitable converter", type.FullName);
 
             return null;
         }
@@ -151,7 +146,8 @@ namespace BinarySerialization.Readers
                 var length = (int)ReadPrimitive(typeof(int), stream);
                 if(length > 0)
                 {
-                    var bytes = ReadStream(stream, length);
+                    var bytes = new byte[length];
+                    ReadStream(stream, bytes, length);
                     return ConvertionUtils.GetString(bytes);
                 }
 
@@ -245,12 +241,9 @@ namespace BinarySerialization.Readers
             return stream.ReadByte() == 0;
         }
 
-        private byte[] ReadStream(Stream stream, int length)
+        private void ReadStream(Stream stream, byte[] dst, int length)
         {
-            var result = new byte[length];
-            stream.Read(result, 0, length);
-
-            return result;
+            stream.Read(dst, 0, length);
         }
     }
 }

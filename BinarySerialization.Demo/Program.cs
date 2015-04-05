@@ -203,21 +203,14 @@ namespace BinarySerialization.Demo
         {
             var valueType = TypeUtils.DetermineObjectType(propType);
 
-            byte[] bytes;
+            byte[] bytes = new byte[sizeof(decimal)];
             switch(valueType)
             {
                 case ObjectType.Primitive:
                 primitive:
-                    bytes = ConvertionUtils.GetBytes(value);
-                    if(bytes != null)
-                    {
-                        Console.WriteLine("{0} (data)", ByteArrayToString(bytes));
-                    }
-                    else
-                    {
-                        Console.WriteLine("unsupported");
-                    }
-
+                    var readed = ConvertionUtils.Convert(value, bytes);
+                    Console.WriteLine("{0} (data)", ByteArrayToString(bytes, readed));
+                    
                     break;
 
                 case ObjectType.Nullable:
@@ -226,10 +219,10 @@ namespace BinarySerialization.Demo
 
                 case ObjectType.String:
                     bytes = ConvertionUtils.GetStringBytes(value as String);
-                    Console.Write("0x01 (not-null) {0} (length)", ByteArrayToString(BitConverter.GetBytes(bytes.Length)));
+                    Console.Write("0x01 (not-null) {0} (length)", ByteArrayToString(BitConverter.GetBytes(bytes.Length), sizeof(int)));
                     if(bytes.Length > 0)
                     {
-                        Console.Write(" {0} (data)", ByteArrayToString(bytes));
+                        Console.Write(" {0} (data)", ByteArrayToString(bytes, bytes.Length));
                     }
                     Console.WriteLine();
                     break;
@@ -264,8 +257,8 @@ namespace BinarySerialization.Demo
 
                         if(supportedEnumerable)
                         {
-                            var count = enumerable.Cast<object>().Count();
-                            Console.WriteLine("0x01 (not-null) {0} (count)", ByteArrayToString(BitConverter.GetBytes(count)));
+                            int count = enumerable.Cast<object>().Count();
+                            Console.WriteLine("0x01 (not-null) {0} (count)", ByteArrayToString(BitConverter.GetBytes(count), sizeof(int)));
 
                             if(count > 0)
                             {
@@ -315,9 +308,9 @@ namespace BinarySerialization.Demo
             return String.Empty;
         }
 
-        private static string ByteArrayToString(byte[] bytes)
+        private static string ByteArrayToString(byte[] bytes, int length)
         {
-            return "0x" + String.Join("", bytes.Select(c => Convert.ToString(c, 16).PadLeft(2, '0')));
+            return "0x" + String.Join("", bytes.Take(length).Select(c => Convert.ToString(c, 16).PadLeft(2, '0')));
         }
     }
 }
