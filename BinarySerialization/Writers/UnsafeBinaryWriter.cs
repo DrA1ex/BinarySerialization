@@ -10,6 +10,13 @@ namespace BinarySerialization.Writers
 {
     public sealed class UnsafeBinaryWriter : IBinaryWriter
     {
+        private byte[] _temporaryBuffer;
+
+        public byte[] TemporaryBuffer
+        {
+            get { return _temporaryBuffer ?? (_temporaryBuffer = new byte[sizeof(decimal)]); }
+        }
+
         public void WriteObject(object obj, Stream stream)
         {
             Contract.Requires<ArgumentNullException>(obj != null);
@@ -115,30 +122,16 @@ namespace BinarySerialization.Writers
 
         private void WritePrimitive(object value, Stream stream)
         {
-            var valueType = value.GetType();
-            if(ConvertionUtils.CanConvertPrimitiveType(valueType))
-            {
-                var valueBytes = ConvertionUtils.GetBytes(value);
-                WriteBytes(valueBytes, stream);
-            }
-            else
-            {
-                TraceUtils.WriteLineFormatted("Unable to write value of type \"{0}\": Unable to find suitable converter", value.GetType().FullName);
-            }
+            var affected = ConvertionUtils.Convert(value, TemporaryBuffer);
+            WriteBytes(TemporaryBuffer, affected, stream);
         }
 
         private void WriteNullableValueType(object value, Stream stream)
         {
             var valueType = value.GetType();
-            if(ConvertionUtils.CanConvertPrimitiveType(valueType))
-            {
-                WriteNullFlag(false, stream);
-                WritePlainObject(value, valueType, stream);
-            }
-            else
-            {
-                TraceUtils.WriteLineFormatted("Unable to write Nullable value of type \"{0}\": Unable to find suitable converter", valueType.FullName);
-            }
+
+            WriteNullFlag(false, stream);
+            WritePlainObject(value, valueType, stream);
         }
 
         private void WriteString(string value, Stream stream)
@@ -151,7 +144,7 @@ namespace BinarySerialization.Writers
             {
                 var stringBytes = ConvertionUtils.GetStringBytes(value);
                 WritePrimitive(stringBytes.Length, stream);
-                WriteBytes(stringBytes, stream);
+                WriteBytes(stringBytes, stringBytes.Length, stream);
             }
             else
             {
@@ -190,7 +183,7 @@ namespace BinarySerialization.Writers
                             ++count;
                         }
 
-                        WriteBytes(BitConverter.GetBytes(count), stream);
+                        WriteBytes(TemporaryBuffer, ConvertionUtils.Convert(count, TemporaryBuffer), stream);
 
                         if(count > 0)
                         {
@@ -239,9 +232,10 @@ namespace BinarySerialization.Writers
             stream.WriteByte((byte)(isNull ? 0 : 1));
         }
 
-        private void WriteBytes(byte[] bytes, Stream stream)
+        private void WriteBytes(byte[] bytes, int length, Stream stream)
         {
-            stream.Write(bytes, 0, bytes.Length);
+            Contract.Requires<ArgumentOutOfRangeException>(length <= bytes.Length);
+            stream.Write(bytes, 0, length);
         }
     }
 }
